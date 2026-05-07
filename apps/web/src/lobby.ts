@@ -4,7 +4,7 @@ export interface LobbyFilters {
   branch: "all" | GameBranch;
   modMode: "all" | ModMode;
   status: "recruiting" | "playing" | "all";
-  difficultyMode: "all" | "n" | "ascension";
+  difficultyLevel: "all" | number;
   minDifficulty: number;
   maxDifficulty: number;
   query: string;
@@ -14,7 +14,7 @@ export const defaultFilters: LobbyFilters = {
   branch: "all",
   modMode: "all",
   status: "recruiting",
-  difficultyMode: "all",
+  difficultyLevel: "all",
   minDifficulty: 0,
   maxDifficulty: 20,
   query: "",
@@ -25,7 +25,6 @@ export const defaultRoomInput: RoomInput = {
   branch: "stable",
   modMode: "none",
   modTags: [],
-  difficultyMode: "n",
   difficultyLevel: 10,
   currentPlayers: 1,
   maxPlayers: 4,
@@ -39,7 +38,7 @@ export function filterRooms(rooms: Room[], filters: LobbyFilters): Room[] {
     if (filters.status !== "all" && room.status !== filters.status) return false;
     if (filters.branch !== "all" && room.branch !== filters.branch) return false;
     if (filters.modMode !== "all" && room.modMode !== filters.modMode) return false;
-    if (filters.difficultyMode !== "all" && room.difficultyMode !== filters.difficultyMode) return false;
+    if (filters.difficultyLevel !== "all" && room.difficultyLevel !== filters.difficultyLevel) return false;
     if (room.difficultyLevel < filters.minDifficulty || room.difficultyLevel > filters.maxDifficulty) return false;
     if (!query) return true;
     const searchable = [
@@ -72,8 +71,8 @@ export function getModModeLabel(mode: ModMode): string {
   return mode === "none" ? "无Mod" : "有Mod";
 }
 
-export function getDifficultyLabel(room: Pick<Room, "difficultyMode" | "difficultyLevel">): string {
-  return room.difficultyMode === "n" ? `N${room.difficultyLevel}` : `进阶${room.difficultyLevel}`;
+export function getDifficultyLabel(room: Pick<Room, "difficultyLevel">): string {
+  return `N${room.difficultyLevel}`;
 }
 
 export function getCountdownTarget(room: Room): string | null {
@@ -100,7 +99,6 @@ export function roomToInput(room: Room): RoomInput {
     branch: room.branch,
     modMode: room.modMode,
     modTags: room.modTags,
-    difficultyMode: room.difficultyMode,
     difficultyLevel: room.difficultyLevel,
     currentPlayers: room.currentPlayers,
     maxPlayers: room.maxPlayers,

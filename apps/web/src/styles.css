@@ -120,7 +120,8 @@ h3 {
 .danger-button,
 .icon-button,
 .copy-button,
-.voice-link {
+.voice-link,
+.voice-none {
   min-height: 36px;
   border-radius: 8px;
   border: 1px solid transparent;
@@ -309,7 +310,8 @@ textarea:focus {
 .room-meta span,
 .tag,
 .status-pill,
-.owner-mark {
+.owner-mark,
+.voice-none {
   display: inline-flex;
   align-items: center;
   min-height: 24px;

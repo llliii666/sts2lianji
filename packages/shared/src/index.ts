@@ -13,7 +13,6 @@ export const MAX_ACTIVE_ROOMS_PER_VISITOR = 1;
 
 export type GameBranch = "stable" | "beta";
 export type ModMode = "none" | "modded";
-export type DifficultyMode = "n" | "ascension";
 export type RoomStatus = "draft" | "recruiting" | "playing" | "ended";
 
 export interface Visitor {
@@ -42,7 +41,6 @@ export interface RoomInput {
   branch: GameBranch;
   modMode: ModMode;
   modTags: string[];
-  difficultyMode: DifficultyMode;
   difficultyLevel: number;
   currentPlayers: number;
   maxPlayers: number;
@@ -190,7 +188,6 @@ export function normalizeRoomInput(input: unknown): RoomInput {
     branch: cleanEnum(data.branch, "版本", ["stable", "beta"] as const),
     modMode,
     modTags,
-    difficultyMode: cleanEnum(data.difficultyMode, "难度类型", ["n", "ascension"] as const),
     difficultyLevel: cleanNumber(data.difficultyLevel, "难度等级", 0, 20),
     currentPlayers,
     maxPlayers,

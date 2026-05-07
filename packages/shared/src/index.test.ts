@@ -17,7 +17,6 @@ describe("shared validation", () => {
         branch: "beta",
         modMode: "modded",
         modTags: ["Together"],
-        difficultyMode: "n",
         difficultyLevel: 10,
         currentPlayers: 2,
         maxPlayers: 4,

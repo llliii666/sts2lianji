@@ -10,7 +10,6 @@ const baseRoom: Room = {
   branch: "beta",
   modMode: "modded",
   modTags: ["Together"],
-  difficultyMode: "n",
   difficultyLevel: 10,
   currentPlayers: 3,
   maxPlayers: 4,
@@ -33,6 +32,11 @@ describe("lobby view helpers", () => {
   it("filters by mod tag query", () => {
     expect(filterRooms([baseRoom], { ...defaultFilters, query: "together" })).toHaveLength(1);
     expect(filterRooms([baseRoom], { ...defaultFilters, query: "downfall" })).toHaveLength(0);
+  });
+
+  it("filters by ascension shorthand level", () => {
+    expect(filterRooms([baseRoom], { ...defaultFilters, difficultyLevel: 10 })).toHaveLength(1);
+    expect(filterRooms([baseRoom], { ...defaultFilters, difficultyLevel: 5 })).toHaveLength(0);
   });
 
   it("formats countdown as mm:ss", () => {

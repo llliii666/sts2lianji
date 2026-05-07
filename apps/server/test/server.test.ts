@@ -8,7 +8,6 @@ const baseRoomInput: RoomInput = {
   branch: "beta",
   modMode: "modded",
   modTags: ["Together"],
-  difficultyMode: "n",
   difficultyLevel: 10,
   currentPlayers: 3,
   maxPlayers: 4,

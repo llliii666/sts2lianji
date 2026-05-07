@@ -115,6 +115,7 @@ interface RoomFormProps {
 function RoomForm({ initial = defaultRoomInput, title, submitLabel, onCancel, onSubmit }: RoomFormProps) {
   const [value, setValue] = useState<RoomInput>(initial);
   const [modTagsText, setModTagsText] = useState(initial.modTags.join(", "));
+  const [voiceMode, setVoiceMode] = useState<"none" | "link">(initial.voiceLink ? "link" : "none");
 
   function update<K extends keyof RoomInput>(key: K, nextValue: RoomInput[K]) {
     setValue((current) => ({ ...current, [key]: nextValue }));
@@ -129,6 +130,7 @@ function RoomForm({ initial = defaultRoomInput, title, submitLabel, onCancel, on
           onSubmit({
             ...value,
             modTags: value.modMode === "modded" ? modTagsText.split(",").map((tag) => tag.trim()) : [],
+            voiceLink: voiceMode === "link" ? value.voiceLink : "",
           });
         }}
       >
@@ -168,17 +170,7 @@ function RoomForm({ initial = defaultRoomInput, title, submitLabel, onCancel, on
             />
           </label>
           <label>
-            难度类型
-            <select
-              value={value.difficultyMode}
-              onChange={(event) => update("difficultyMode", event.target.value as RoomInput["difficultyMode"])}
-            >
-              <option value="n">N</option>
-              <option value="ascension">进阶</option>
-            </select>
-          </label>
-          <label>
-            难度
+            进阶等级(N)
             <input
               type="number"
               min={0}
@@ -207,10 +199,26 @@ function RoomForm({ initial = defaultRoomInput, title, submitLabel, onCancel, on
               onChange={(event) => update("maxPlayers", Number(event.target.value))}
             />
           </label>
-          <label className="span-2">
-            语音链接
-            <input value={value.voiceLink} onChange={(event) => update("voiceLink", event.target.value)} />
+          <label>
+            语音频道
+            <select
+              value={voiceMode}
+              onChange={(event) => {
+                const nextMode = event.target.value as "none" | "link";
+                setVoiceMode(nextMode);
+                if (nextMode === "none") update("voiceLink", "");
+              }}
+            >
+              <option value="none">无</option>
+              <option value="link">有链接</option>
+            </select>
           </label>
+          {voiceMode === "link" && (
+            <label>
+              语音链接
+              <input value={value.voiceLink} onChange={(event) => update("voiceLink", event.target.value)} />
+            </label>
+          )}
           <label className="span-2">
             备注
             <textarea value={value.notes} onChange={(event) => update("notes", event.target.value)} rows={3} />
@@ -281,6 +289,12 @@ function RoomCard({ room, now, owned = false, onCopy }: { room: Room; now: numbe
             语音
           </a>
         )}
+        {!room.voiceLink && (
+          <span className="voice-none">
+            <Radio size={15} aria-hidden="true" />
+            无语音
+          </span>
+        )}
         {owned && <span className="owner-mark">我的房间</span>}
       </div>
     </article>
@@ -312,12 +326,18 @@ function Filters({ filters, onChange }: { filters: LobbyFilters; onChange: (filt
         <option value="modded">有Mod</option>
       </select>
       <select
-        value={filters.difficultyMode}
-        onChange={(event) => set("difficultyMode", event.target.value as LobbyFilters["difficultyMode"])}
+        value={filters.difficultyLevel}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          set("difficultyLevel", nextValue === "all" ? "all" : Number(nextValue));
+        }}
       >
-        <option value="all">全部难度</option>
-        <option value="n">N</option>
-        <option value="ascension">进阶</option>
+        <option value="all">全部进阶</option>
+        {Array.from({ length: 21 }, (_, index) => (
+          <option value={index} key={index}>
+            N{index}
+          </option>
+        ))}
       </select>
     </section>
   );
