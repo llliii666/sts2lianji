@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.omx/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+data/*.sqlite
+data/*.sqlite-*
+apps/web/dist/
+apps/server/dist/
+packages/shared/dist/
+npm-debug.log*
