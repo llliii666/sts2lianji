@@ -1,3 +1,4 @@
+import { ASCENSION_LEVEL_MAX, ASCENSION_LEVEL_MIN } from "@spire-lobby/shared";
 import type { GameBranch, ModMode, Room, RoomInput, RoomStatus } from "@spire-lobby/shared";
 
 export interface LobbyFilters {
@@ -15,8 +16,8 @@ export const defaultFilters: LobbyFilters = {
   modMode: "all",
   status: "recruiting",
   difficultyLevel: "all",
-  minDifficulty: 0,
-  maxDifficulty: 20,
+  minDifficulty: ASCENSION_LEVEL_MIN,
+  maxDifficulty: ASCENSION_LEVEL_MAX,
   query: "",
 };
 

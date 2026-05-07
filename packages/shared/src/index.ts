@@ -10,6 +10,8 @@ export const VOICE_LINK_MAX_LENGTH = 200;
 export const MOD_TAG_MAX_LENGTH = 32;
 export const MOD_TAG_LIMIT = 8;
 export const MAX_ACTIVE_ROOMS_PER_VISITOR = 1;
+export const ASCENSION_LEVEL_MIN = 0;
+export const ASCENSION_LEVEL_MAX = 10;
 
 export type GameBranch = "stable" | "beta";
 export type ModMode = "none" | "modded";
@@ -188,7 +190,7 @@ export function normalizeRoomInput(input: unknown): RoomInput {
     branch: cleanEnum(data.branch, "版本", ["stable", "beta"] as const),
     modMode,
     modTags,
-    difficultyLevel: cleanNumber(data.difficultyLevel, "难度等级", 0, 20),
+    difficultyLevel: cleanNumber(data.difficultyLevel, "难度等级", ASCENSION_LEVEL_MIN, ASCENSION_LEVEL_MAX),
     currentPlayers,
     maxPlayers,
     voiceLink,

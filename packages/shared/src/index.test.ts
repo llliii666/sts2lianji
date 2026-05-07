@@ -25,4 +25,20 @@ describe("shared validation", () => {
       }),
     ).toThrow(DomainValidationError);
   });
+
+  it("rejects ascension levels above the current game cap", () => {
+    expect(() =>
+      normalizeRoomInput({
+        title: "N11",
+        branch: "stable",
+        modMode: "none",
+        modTags: [],
+        difficultyLevel: 11,
+        currentPlayers: 1,
+        maxPlayers: 4,
+        voiceLink: "",
+        notes: "",
+      }),
+    ).toThrow(DomainValidationError);
+  });
 });

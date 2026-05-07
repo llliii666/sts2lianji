@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { io } from "socket.io-client";
+import { ASCENSION_LEVEL_MAX, ASCENSION_LEVEL_MIN } from "@spire-lobby/shared";
 import type { Room, RoomInput, RoomsResponse, Visitor } from "@spire-lobby/shared";
 import { api, getSocketUrl } from "./api.js";
 import {
@@ -173,8 +174,8 @@ function RoomForm({ initial = defaultRoomInput, title, submitLabel, onCancel, on
             进阶等级(N)
             <input
               type="number"
-              min={0}
-              max={20}
+              min={ASCENSION_LEVEL_MIN}
+              max={ASCENSION_LEVEL_MAX}
               value={value.difficultyLevel}
               onChange={(event) => update("difficultyLevel", Number(event.target.value))}
             />
@@ -333,11 +334,14 @@ function Filters({ filters, onChange }: { filters: LobbyFilters; onChange: (filt
         }}
       >
         <option value="all">全部进阶</option>
-        {Array.from({ length: 21 }, (_, index) => (
-          <option value={index} key={index}>
-            N{index}
-          </option>
-        ))}
+        {Array.from({ length: ASCENSION_LEVEL_MAX - ASCENSION_LEVEL_MIN + 1 }, (_, offset) => {
+          const index = ASCENSION_LEVEL_MIN + offset;
+          return (
+            <option value={index} key={index}>
+              N{index}
+            </option>
+          );
+        })}
       </select>
     </section>
   );

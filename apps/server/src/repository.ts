@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import {
+  ASCENSION_LEVEL_MAX,
   MAX_ACTIVE_ROOMS_PER_VISITOR,
   PLAYING_TTL_MS,
   RECRUITING_TTL_MS,
@@ -440,5 +441,8 @@ export class LobbyRepository {
       CREATE INDEX IF NOT EXISTS idx_rooms_public_status ON rooms(status, updated_at);
       CREATE INDEX IF NOT EXISTS idx_rooms_lifecycle ON rooms(status, recruiting_until, destroy_at);
     `);
+    this.db
+      .prepare("UPDATE rooms SET difficulty_level = ? WHERE difficulty_level > ?")
+      .run(ASCENSION_LEVEL_MAX, ASCENSION_LEVEL_MAX);
   }
 }
