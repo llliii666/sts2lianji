@@ -14,7 +14,7 @@ npm run dev
 默认服务：
 
 - 前端：`http://localhost:5173`
-- 后端：`http://localhost:3000`
+- 后端：`http://localhost:4096`
 - 本地数据库：`data/dev.sqlite`
 
 ## 验证

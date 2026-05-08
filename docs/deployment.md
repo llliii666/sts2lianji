@@ -10,17 +10,23 @@
 bash scripts/ubuntu24-check.sh
 ```
 
-如果服务器还没有 Git/Node/Caddy，可以运行环境安装脚本：
+如果服务器还没有 Git/Node，可以运行环境安装脚本：
 
 ```bash
 bash scripts/ubuntu24-bootstrap-env.sh
+```
+
+注意：如果服务器已经用 Nginx 占用 80/443 端口，不要直接安装并启动 Caddy。只有确认 80/443 空闲且打算使用 Caddy 时，才运行：
+
+```bash
+INSTALL_CADDY=1 bash scripts/ubuntu24-bootstrap-env.sh
 ```
 
 如果仓库还没有 clone 到服务器，先运行本文末尾的“未 clone 前的只读检查命令”，把输出发回确认。
 
 ## 服务器依赖
 
-只需要安装 Git、Node.js 24 LTS、Caddy。
+只需要安装 Git、Node.js 24 LTS，以及一个反向代理。当前服务器如果已经有 Nginx，就优先复用 Nginx。
 
 ```bash
 sudo apt update
@@ -31,7 +37,7 @@ node --version
 npm --version
 ```
 
-Caddy 用于自动 HTTPS 和反向代理：
+可选：Caddy 用于自动 HTTPS 和反向代理。如果已经使用 Nginx，不要执行这一段。
 
 ```bash
 sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
@@ -65,7 +71,7 @@ After=network.target
 Type=simple
 WorkingDirectory=/opt/spire-lobby
 Environment=NODE_ENV=production
-Environment=PORT=3000
+Environment=PORT=4096
 Environment=HOST=127.0.0.1
 Environment=DATABASE_PATH=/opt/spire-lobby/data/prod.sqlite
 Environment=PUBLIC_ORIGIN=https://your-domain.example
@@ -91,7 +97,7 @@ sudo systemctl status spire-lobby
 
 ```caddyfile
 your-domain.example {
-  reverse_proxy 127.0.0.1:3000
+  reverse_proxy 127.0.0.1:4096
 }
 ```
 
@@ -99,6 +105,39 @@ your-domain.example {
 
 ```bash
 sudo systemctl reload caddy
+```
+
+## Nginx 反向代理
+
+如果服务器已经运行 Nginx，优先使用 Nginx。创建 `/etc/nginx/sites-available/spire-lobby`：
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your-domain.example;
+
+    client_max_body_size 2m;
+
+    location / {
+        proxy_pass http://127.0.0.1:4096;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+启用配置：
+
+```bash
+sudo ln -s /etc/nginx/sites-available/spire-lobby /etc/nginx/sites-enabled/spire-lobby
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
 ## 更新流程
@@ -115,7 +154,7 @@ sudo systemctl status spire-lobby
 ## 验收命令
 
 ```bash
-curl http://127.0.0.1:3000/api/health
+curl http://127.0.0.1:4096/api/health
 sudo journalctl -u spire-lobby -n 100 --no-pager
 ```
 
