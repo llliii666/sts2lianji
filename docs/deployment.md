@@ -1,6 +1,22 @@
 # 部署说明
 
-目标环境：阿里云轻量服务器 Ubuntu，2 核 2G / 40GB。
+目标环境：阿里云轻量服务器 Ubuntu 24.x，2 核 2G / 40GB。
+
+## 服务器环境检查
+
+上线前先运行只读检查脚本，把输出发回本地确认：
+
+```bash
+bash scripts/ubuntu24-check.sh
+```
+
+如果服务器还没有 Git/Node/Caddy，可以运行环境安装脚本：
+
+```bash
+bash scripts/ubuntu24-bootstrap-env.sh
+```
+
+如果仓库还没有 clone 到服务器，先运行本文末尾的“未 clone 前的只读检查命令”，把输出发回确认。
 
 ## 服务器依赖
 
@@ -101,4 +117,30 @@ sudo systemctl status spire-lobby
 ```bash
 curl http://127.0.0.1:3000/api/health
 sudo journalctl -u spire-lobby -n 100 --no-pager
+```
+
+## 未 clone 前的只读检查命令
+
+```bash
+set -x
+date -Is
+cat /etc/os-release
+uname -a
+nproc
+free -h
+df -h /
+command -v sudo git curl gpg node npm caddy systemctl ss ufw || true
+git --version || true
+curl --version | head -n 1 || true
+node --version || true
+npm --version || true
+caddy version || true
+node --no-warnings=ExperimentalWarning -e "require('node:sqlite'); console.log('node:sqlite ok')" || true
+systemctl is-system-running || true
+systemctl is-enabled caddy || true
+systemctl is-active caddy || true
+ss -ltnp | sed -n '1,30p' || true
+sudo -n ufw status verbose || ufw status verbose || true
+apt-cache policy nodejs | sed -n '1,20p' || true
+apt-cache policy caddy | sed -n '1,20p' || true
 ```
