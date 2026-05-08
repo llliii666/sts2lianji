@@ -4,7 +4,7 @@ import { PLAYING_TTL_MS, RECRUITING_TTL_MS, RoomInput, SessionResponse, VISITOR_
 import { createApp } from "../src/app.js";
 
 const baseRoomInput: RoomInput = {
-  title: "N10 三缺一",
+  title: "a10 三缺一",
   branch: "beta",
   modMode: "modded",
   modTags: ["Together"],

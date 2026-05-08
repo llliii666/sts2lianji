@@ -12,6 +12,8 @@ export const MOD_TAG_LIMIT = 8;
 export const MAX_ACTIVE_ROOMS_PER_VISITOR = 1;
 export const ASCENSION_LEVEL_MIN = 0;
 export const ASCENSION_LEVEL_MAX = 10;
+export const ROOM_PLAYER_COUNT_MIN = 1;
+export const ROOM_PLAYER_COUNT_MAX = 4;
 
 export type GameBranch = "stable" | "beta";
 export type ModMode = "none" | "modded";
@@ -143,8 +145,8 @@ export function normalizeVisitorInput(input: unknown): VisitorInput {
 
 export function normalizeRoomInput(input: unknown): RoomInput {
   const data = asObject(input);
-  const currentPlayers = cleanNumber(data.currentPlayers, "当前人数", 1, 16);
-  const maxPlayers = cleanNumber(data.maxPlayers, "目标人数", 1, 16);
+  const currentPlayers = cleanNumber(data.currentPlayers, "当前人数", ROOM_PLAYER_COUNT_MIN, ROOM_PLAYER_COUNT_MAX);
+  const maxPlayers = cleanNumber(data.maxPlayers, "目标人数", ROOM_PLAYER_COUNT_MIN, ROOM_PLAYER_COUNT_MAX);
   if (currentPlayers > maxPlayers) {
     throw new DomainValidationError("当前人数不能超过目标人数。");
   }
@@ -186,7 +188,7 @@ export function normalizeRoomInput(input: unknown): RoomInput {
   }
 
   return {
-    title: cleanString(data.title, "房间名", ROOM_TITLE_MAX_LENGTH),
+    title: cleanString(data.title ?? "", "房间名", ROOM_TITLE_MAX_LENGTH, false),
     branch: cleanEnum(data.branch, "版本", ["stable", "beta"] as const),
     modMode,
     modTags,

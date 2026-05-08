@@ -13,7 +13,7 @@ describe("shared validation", () => {
   it("rejects unsafe voice links", () => {
     expect(() =>
       normalizeRoomInput({
-        title: "N10 有 mod",
+        title: "a10 有 mod",
         branch: "beta",
         modMode: "modded",
         modTags: ["Together"],
@@ -29,13 +29,45 @@ describe("shared validation", () => {
   it("rejects ascension levels above the current game cap", () => {
     expect(() =>
       normalizeRoomInput({
-        title: "N11",
+        title: "a11",
         branch: "stable",
         modMode: "none",
         modTags: [],
         difficultyLevel: 11,
         currentPlayers: 1,
         maxPlayers: 4,
+        voiceLink: "",
+        notes: "",
+      }),
+    ).toThrow(DomainValidationError);
+  });
+
+  it("allows a blank room title", () => {
+    expect(
+      normalizeRoomInput({
+        title: "",
+        branch: "stable",
+        modMode: "none",
+        modTags: [],
+        difficultyLevel: 10,
+        currentPlayers: 1,
+        maxPlayers: 4,
+        voiceLink: "",
+        notes: "",
+      }).title,
+    ).toBe("");
+  });
+
+  it("rejects player counts above four", () => {
+    expect(() =>
+      normalizeRoomInput({
+        title: "",
+        branch: "stable",
+        modMode: "none",
+        modTags: [],
+        difficultyLevel: 10,
+        currentPlayers: 5,
+        maxPlayers: 5,
         voiceLink: "",
         notes: "",
       }),

@@ -1,4 +1,9 @@
-import { ASCENSION_LEVEL_MAX, ASCENSION_LEVEL_MIN } from "@spire-lobby/shared";
+import {
+  ASCENSION_LEVEL_MAX,
+  ASCENSION_LEVEL_MIN,
+  ROOM_PLAYER_COUNT_MAX,
+  ROOM_PLAYER_COUNT_MIN,
+} from "@spire-lobby/shared";
 import type { GameBranch, ModMode, Room, RoomInput, RoomStatus } from "@spire-lobby/shared";
 
 export interface LobbyFilters {
@@ -22,13 +27,13 @@ export const defaultFilters: LobbyFilters = {
 };
 
 export const defaultRoomInput: RoomInput = {
-  title: "N10 招募",
+  title: "",
   branch: "stable",
   modMode: "none",
   modTags: [],
   difficultyLevel: 10,
-  currentPlayers: 1,
-  maxPlayers: 4,
+  currentPlayers: ROOM_PLAYER_COUNT_MIN,
+  maxPlayers: ROOM_PLAYER_COUNT_MAX,
   voiceLink: "",
   notes: "",
 };
@@ -73,7 +78,7 @@ export function getModModeLabel(mode: ModMode): string {
 }
 
 export function getDifficultyLabel(room: Pick<Room, "difficultyLevel">): string {
-  return `N${room.difficultyLevel}`;
+  return `a${room.difficultyLevel}`;
 }
 
 export function getCountdownTarget(room: Room): string | null {

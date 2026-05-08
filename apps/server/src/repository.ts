@@ -7,6 +7,8 @@ import {
   MAX_ACTIVE_ROOMS_PER_VISITOR,
   PLAYING_TTL_MS,
   RECRUITING_TTL_MS,
+  ROOM_PLAYER_COUNT_MAX,
+  ROOM_PLAYER_COUNT_MIN,
   Room,
   RoomInput,
   RoomStatus,
@@ -444,5 +446,17 @@ export class LobbyRepository {
     this.db
       .prepare("UPDATE rooms SET difficulty_level = ? WHERE difficulty_level > ?")
       .run(ASCENSION_LEVEL_MAX, ASCENSION_LEVEL_MAX);
+    this.db
+      .prepare("UPDATE rooms SET max_players = ? WHERE max_players > ?")
+      .run(ROOM_PLAYER_COUNT_MAX, ROOM_PLAYER_COUNT_MAX);
+    this.db
+      .prepare("UPDATE rooms SET max_players = ? WHERE max_players < ?")
+      .run(ROOM_PLAYER_COUNT_MIN, ROOM_PLAYER_COUNT_MIN);
+    this.db
+      .prepare("UPDATE rooms SET current_players = max_players WHERE current_players > max_players")
+      .run();
+    this.db
+      .prepare("UPDATE rooms SET current_players = ? WHERE current_players < ?")
+      .run(ROOM_PLAYER_COUNT_MIN, ROOM_PLAYER_COUNT_MIN);
   }
 }

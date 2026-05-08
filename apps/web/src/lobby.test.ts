@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Room } from "@spire-lobby/shared";
-import { defaultFilters, filterRooms, formatRemaining } from "./lobby.js";
+import { defaultFilters, defaultRoomInput, filterRooms, formatRemaining, getDifficultyLabel } from "./lobby.js";
 
 const baseRoom: Room = {
   id: "room-1",
   hostVisitorId: "visitor-1",
   host: { displayName: "阿鲸", steamFriendCode: "123456" },
-  title: "N10 有mod",
+  title: "a10 有mod",
   branch: "beta",
   modMode: "modded",
   modTags: ["Together"],
@@ -37,6 +37,14 @@ describe("lobby view helpers", () => {
   it("filters by ascension shorthand level", () => {
     expect(filterRooms([baseRoom], { ...defaultFilters, difficultyLevel: 10 })).toHaveLength(1);
     expect(filterRooms([baseRoom], { ...defaultFilters, difficultyLevel: 5 })).toHaveLength(0);
+  });
+
+  it("labels ascension with the lowercase a shorthand", () => {
+    expect(getDifficultyLabel(baseRoom)).toBe("a10");
+  });
+
+  it("starts new rooms with a blank title", () => {
+    expect(defaultRoomInput.title).toBe("");
   });
 
   it("formats countdown as mm:ss", () => {

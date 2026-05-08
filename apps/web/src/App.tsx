@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { io } from "socket.io-client";
-import { ASCENSION_LEVEL_MAX, ASCENSION_LEVEL_MIN } from "@spire-lobby/shared";
+import { ASCENSION_LEVEL_MAX, ASCENSION_LEVEL_MIN, ROOM_PLAYER_COUNT_MAX, ROOM_PLAYER_COUNT_MIN } from "@spire-lobby/shared";
 import type { Room, RoomInput, RoomsResponse, Visitor } from "@spire-lobby/shared";
 import { api, getSocketUrl } from "./api.js";
 import {
@@ -145,7 +145,7 @@ function RoomForm({ initial = defaultRoomInput, title, submitLabel, onCancel, on
         <div className="form-grid">
           <label className="span-2">
             房间名
-            <input value={value.title} onChange={(event) => update("title", event.target.value)} />
+            <input value={value.title} onChange={(event) => update("title", event.target.value)} placeholder="可留空" />
           </label>
           <label>
             版本
@@ -171,7 +171,7 @@ function RoomForm({ initial = defaultRoomInput, title, submitLabel, onCancel, on
             />
           </label>
           <label>
-            进阶等级(N)
+            进阶等级(a)
             <input
               type="number"
               min={ASCENSION_LEVEL_MIN}
@@ -184,8 +184,8 @@ function RoomForm({ initial = defaultRoomInput, title, submitLabel, onCancel, on
             当前人数
             <input
               type="number"
-              min={1}
-              max={16}
+              min={ROOM_PLAYER_COUNT_MIN}
+              max={ROOM_PLAYER_COUNT_MAX}
               value={value.currentPlayers}
               onChange={(event) => update("currentPlayers", Number(event.target.value))}
             />
@@ -194,8 +194,8 @@ function RoomForm({ initial = defaultRoomInput, title, submitLabel, onCancel, on
             目标人数
             <input
               type="number"
-              min={1}
-              max={16}
+              min={ROOM_PLAYER_COUNT_MIN}
+              max={ROOM_PLAYER_COUNT_MAX}
               value={value.maxPlayers}
               onChange={(event) => update("maxPlayers", Number(event.target.value))}
             />
@@ -251,7 +251,7 @@ function RoomCard({ room, now, owned = false, onCopy }: { room: Room; now: numbe
     <article className={`room-card status-${room.status}`}>
       <div className="room-card-top">
         <div>
-          <h3>{room.title}</h3>
+          <h3>{room.title || "未命名房间"}</h3>
           <div className="room-meta">
             <span>{getBranchLabel(room.branch)}</span>
             <span>{getModModeLabel(room.modMode)}</span>
@@ -338,7 +338,7 @@ function Filters({ filters, onChange }: { filters: LobbyFilters; onChange: (filt
           const index = ASCENSION_LEVEL_MIN + offset;
           return (
             <option value={index} key={index}>
-              N{index}
+              a{index}
             </option>
           );
         })}
