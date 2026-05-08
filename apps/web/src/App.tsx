@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Check,
+  CircleHelp,
   Copy,
   Edit3,
   LogOut,
@@ -27,12 +28,24 @@ import {
   getCountdownTarget,
   getDifficultyLabel,
   getModModeLabel,
+  getRoomSaveReminder,
   getStatusLabel,
   roomToInput,
+  tutorialSections,
   type LobbyFilters,
 } from "./lobby.js";
 
 const STORAGE_KEY = "spire-lobby-session";
+const TUTORIAL_STORAGE_KEY = "spire-lobby-tutorial-seen-v1";
+
+type ToastTone = "success" | "info" | "warning" | "error";
+
+interface ToastMessage {
+  id: number;
+  tone: ToastTone;
+  title: string;
+  body?: string;
+}
 
 interface StoredSession {
   token: string;
@@ -59,6 +72,28 @@ function writeStoredSession(visitor: Visitor): void {
       displayName: visitor.displayName,
       steamFriendCode: visitor.steamFriendCode,
     }),
+  );
+}
+
+function hasSeenTutorial(): boolean {
+  return localStorage.getItem(TUTORIAL_STORAGE_KEY) === "1";
+}
+
+function markTutorialSeen(): void {
+  localStorage.setItem(TUTORIAL_STORAGE_KEY, "1");
+}
+
+function ToastNotice({ toast, leaving, onClose }: { toast: ToastMessage; leaving: boolean; onClose: () => void }) {
+  return (
+    <div className={`toast toast-${toast.tone} ${leaving ? "toast-leaving" : ""}`} role="status" aria-live="polite">
+      <div>
+        <strong>{toast.title}</strong>
+        {toast.body && <p>{toast.body}</p>}
+      </div>
+      <button className="toast-close" type="button" onClick={onClose} aria-label="关闭提醒">
+        <X size={16} aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 
@@ -101,6 +136,38 @@ export function ProfileDialog({ initial, saving = false, onSubmit }: ProfileDial
           保存
         </button>
       </form>
+    </div>
+  );
+}
+
+export function TutorialDialog({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+      <section className="modal tutorial-modal">
+        <div className="modal-header">
+          <div>
+            <h2 id="tutorial-title">快速使用教程</h2>
+            <p>第一次登录自动显示，之后可从右上角“教程”重新打开。</p>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="关闭教程">
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="tutorial-list">
+          {tutorialSections.map((section) => (
+            <article className="tutorial-item" key={section.title}>
+              <h3>{section.title}</h3>
+              <p>{section.body}</p>
+            </article>
+          ))}
+        </div>
+        <div className="modal-actions">
+          <button className="primary-button" type="button" onClick={onClose}>
+            <Check size={16} aria-hidden="true" />
+            我知道了
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
@@ -246,7 +313,19 @@ function Countdown({ room, now }: { room: Room; now: number }) {
   return <span className="countdown">{formatRemaining(target, now)}</span>;
 }
 
-function RoomCard({ room, now, owned = false, onCopy }: { room: Room; now: number; owned?: boolean; onCopy: () => void }) {
+function RoomCard({
+  room,
+  now,
+  owned = false,
+  onCopy,
+  onVoiceOpen,
+}: {
+  room: Room;
+  now: number;
+  owned?: boolean;
+  onCopy: () => void;
+  onVoiceOpen?: () => void;
+}) {
   return (
     <article className={`room-card status-${room.status}`}>
       <div className="room-card-top">
@@ -280,23 +359,34 @@ function RoomCard({ room, now, owned = false, onCopy }: { room: Room; now: numbe
       {room.notes && <p className="notes">{room.notes}</p>}
 
       <div className="room-footer">
-        <button className="copy-button" type="button" onClick={onCopy}>
-          <Copy size={15} aria-hidden="true" />
-          {room.host.displayName}({room.host.steamFriendCode})
-        </button>
-        {room.voiceLink && (
-          <a href={room.voiceLink} target="_blank" rel="noreferrer" className="voice-link">
-            <Radio size={15} aria-hidden="true" />
-            语音
-          </a>
-        )}
-        {!room.voiceLink && (
-          <span className="voice-none">
-            <Radio size={15} aria-hidden="true" />
-            无语音
-          </span>
-        )}
-        {owned && <span className="owner-mark">我的房间</span>}
+        <div className="room-footer-left">
+          <button className="copy-button" type="button" onClick={onCopy} title="复制房主 Steam 好友码">
+            <Copy size={15} aria-hidden="true" />
+            {room.host.displayName}({room.host.steamFriendCode})
+          </button>
+        </div>
+        <div className="room-footer-right">
+          {room.voiceLink && (
+            <a
+              href={room.voiceLink}
+              target="_blank"
+              rel="noreferrer"
+              className="voice-link"
+              onClick={onVoiceOpen}
+              title="打开语音频道外链"
+            >
+              <Radio size={15} aria-hidden="true" />
+              语音
+            </a>
+          )}
+          {!room.voiceLink && (
+            <span className="voice-none">
+              <Radio size={15} aria-hidden="true" />
+              无语音
+            </span>
+          )}
+          {owned && <span className="owner-mark">我的房间</span>}
+        </div>
       </div>
     </article>
   );
@@ -353,8 +443,10 @@ export function App() {
   const [myRoom, setMyRoom] = useState<Room | null>(null);
   const [filters, setFilters] = useState<LobbyFilters>(defaultFilters);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
   const [roomFormMode, setRoomFormMode] = useState<"create" | "edit" | null>(null);
-  const [message, setMessage] = useState("");
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [toastLeaving, setToastLeaving] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [busy, setBusy] = useState(false);
 
@@ -372,6 +464,36 @@ export function App() {
     setRooms(response.rooms);
   }
 
+  function showToast(tone: ToastTone, title: string, body?: string) {
+    setToastLeaving(false);
+    setToast({ id: Date.now(), tone, title, body });
+  }
+
+  function dismissToast() {
+    setToastLeaving(true);
+    window.setTimeout(() => setToast(null), 240);
+  }
+
+  function openTutorialIfNeeded() {
+    if (!hasSeenTutorial()) setTutorialOpen(true);
+  }
+
+  function closeTutorial() {
+    markTutorialSeen();
+    setTutorialOpen(false);
+  }
+
+  useEffect(() => {
+    if (!toast) return;
+    setToastLeaving(false);
+    const fadeTimer = window.setTimeout(() => setToastLeaving(true), 4_800);
+    const removeTimer = window.setTimeout(() => setToast(null), 5_100);
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(removeTimer);
+    };
+  }, [toast?.id]);
+
   useEffect(() => {
     const stored = readStoredSession();
     if (!stored) {
@@ -382,10 +504,11 @@ export function App() {
 
     api
       .restoreSession(stored.token)
-      .then((response) => {
+      .then(async (response) => {
         setVisitor(response.visitor);
         writeStoredSession(response.visitor);
-        return Promise.all([refreshRooms(), refreshMine(response.visitor.token)]);
+        await Promise.all([refreshRooms(), refreshMine(response.visitor.token)]);
+        openTutorialIfNeeded();
       })
       .catch(() => {
         localStorage.removeItem(STORAGE_KEY);
@@ -413,15 +536,16 @@ export function App() {
 
   async function handleProfileSave(input: { displayName: string; steamFriendCode: string }) {
     setBusy(true);
-    setMessage("");
     try {
       const response = await api.saveSession({ ...input, token: visitor?.token ?? readStoredSession()?.token });
       setVisitor(response.visitor);
       writeStoredSession(response.visitor);
       setProfileOpen(false);
       await refreshMine(response.visitor.token);
+      showToast("success", "临时资料已保存", "房间左下角复制按钮可复制房主 Steam 好友码。");
+      openTutorialIfNeeded();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "保存失败。");
+      showToast("error", "保存失败", error instanceof Error ? error.message : "请检查显示名和 Steam 好友码。");
     } finally {
       setBusy(false);
     }
@@ -430,14 +554,13 @@ export function App() {
   async function handleCreateRoom(input: RoomInput) {
     if (!token) return setProfileOpen(true);
     setBusy(true);
-    setMessage("");
     try {
       const response = await api.createRoom(token, input);
       setMyRoom(response.room);
       setRoomFormMode(null);
-      setMessage("草稿已保存。");
+      showToast("success", "草稿已保存", getRoomSaveReminder(input, "created"));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "创建失败。");
+      showToast("error", "创建失败", error instanceof Error ? error.message : "请检查房间信息。");
     } finally {
       setBusy(false);
     }
@@ -446,14 +569,13 @@ export function App() {
   async function handleUpdateRoom(input: RoomInput) {
     if (!token || !myRoom) return;
     setBusy(true);
-    setMessage("");
     try {
       const response = await api.updateRoom(token, myRoom.id, input);
       setMyRoom(response.room);
       setRoomFormMode(null);
-      setMessage("房间已更新并发布。");
+      showToast("success", "房间已更新并发布", getRoomSaveReminder(input, "updated"));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "更新失败。");
+      showToast("error", "更新失败", error instanceof Error ? error.message : "请检查房间信息。");
     } finally {
       setBusy(false);
     }
@@ -462,13 +584,12 @@ export function App() {
   async function handlePublishRoom() {
     if (!token || !myRoom) return;
     setBusy(true);
-    setMessage("");
     try {
       const response = await api.publishRoom(token, myRoom.id);
       setMyRoom(response.room);
-      setMessage("房间已发布。");
+      showToast("success", "房间已发布", getRoomSaveReminder(response.room, "published"));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "发布失败。");
+      showToast("error", "发布失败", error instanceof Error ? error.message : "请稍后重试。");
     } finally {
       setBusy(false);
     }
@@ -477,21 +598,29 @@ export function App() {
   async function handleEndRoom() {
     if (!token || !myRoom) return;
     setBusy(true);
-    setMessage("");
     try {
       await api.endRoom(token, myRoom.id);
       setMyRoom(null);
-      setMessage("房间已结束。");
+      showToast("success", "房间已结束", "公共大厅中的房间信息已同步删除。");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "结束失败。");
+      showToast("error", "结束失败", error instanceof Error ? error.message : "请稍后重试。");
     } finally {
       setBusy(false);
     }
   }
 
   async function copyFriendCode(room: Room) {
-    await navigator.clipboard?.writeText(room.host.steamFriendCode);
-    setMessage(`已复制 ${room.host.displayName} 的好友码。`);
+    try {
+      if (!navigator.clipboard) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(room.host.steamFriendCode);
+      showToast("success", "已复制 Steam 好友码", `${room.host.displayName}: ${room.host.steamFriendCode}`);
+    } catch {
+      showToast("error", "复制失败", "浏览器未允许剪贴板访问，请手动复制房主好友码。");
+    }
+  }
+
+  function handleVoiceOpen(room: Room) {
+    showToast("info", "正在打开语音频道", "语音频道是房主提供的外部链接，请确认来源可信。");
   }
 
   function logout() {
@@ -509,6 +638,10 @@ export function App() {
           <p>实时房间 · 版本/Mod/难度筛选 · 房主续期</p>
         </div>
         <div className="topbar-actions">
+          <button className="secondary-button" type="button" onClick={() => setTutorialOpen(true)}>
+            <CircleHelp size={16} aria-hidden="true" />
+            教程
+          </button>
           {visitor && (
             <button className="secondary-button" type="button" onClick={() => setProfileOpen(true)}>
               <UserRound size={16} aria-hidden="true" />
@@ -523,7 +656,7 @@ export function App() {
         </div>
       </header>
 
-      {message && <div className="toast">{message}</div>}
+      {toast && <ToastNotice toast={toast} leaving={toastLeaving} onClose={dismissToast} />}
 
       <section className="owner-panel">
         <div className="owner-panel-head">
@@ -539,7 +672,13 @@ export function App() {
 
         {myRoom ? (
           <div className="owner-room-grid">
-            <RoomCard room={myRoom} now={now} owned onCopy={() => void copyFriendCode(myRoom)} />
+            <RoomCard
+              room={myRoom}
+              now={now}
+              owned
+              onCopy={() => void copyFriendCode(myRoom)}
+              onVoiceOpen={() => handleVoiceOpen(myRoom)}
+            />
             <div className="owner-actions">
               <button className="primary-button" type="button" disabled={busy} onClick={handlePublishRoom}>
                 <Send size={16} aria-hidden="true" />
@@ -577,12 +716,21 @@ export function App() {
 
       <section className="room-list" aria-live="polite">
         {visibleRooms.length > 0 ? (
-          visibleRooms.map((room) => <RoomCard room={room} now={now} key={room.id} onCopy={() => void copyFriendCode(room)} />)
+          visibleRooms.map((room) => (
+            <RoomCard
+              room={room}
+              now={now}
+              key={room.id}
+              onCopy={() => void copyFriendCode(room)}
+              onVoiceOpen={() => handleVoiceOpen(room)}
+            />
+          ))
         ) : (
           <div className="empty-list">没有匹配房间。</div>
         )}
       </section>
 
+      {tutorialOpen && <TutorialDialog onClose={closeTutorial} />}
       {profileOpen && <ProfileDialog initial={readStoredSession() ?? undefined} saving={busy} onSubmit={handleProfileSave} />}
       {roomFormMode === "create" && (
         <RoomForm title="创建房间" submitLabel="保存草稿" onCancel={() => setRoomFormMode(null)} onSubmit={handleCreateRoom} />

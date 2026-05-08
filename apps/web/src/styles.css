@@ -107,6 +107,8 @@ h3 {
 .modal-actions,
 .owner-actions,
 .room-footer,
+.room-footer-left,
+.room-footer-right,
 .room-meta,
 .tag-row {
   display: flex;
@@ -176,13 +178,93 @@ h3 {
 }
 
 .toast {
-  margin: 14px 0;
-  padding: 10px 12px;
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 50;
+  width: min(420px, calc(100vw - 36px));
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 12px 14px;
   border: 1px solid #b9d5cf;
   background: #e9f4f2;
   color: #164940;
   border-radius: 8px;
   font-size: 14px;
+  box-shadow: var(--shadow);
+  animation: toastFadeIn 0.22s ease both;
+}
+
+.toast strong {
+  display: block;
+  line-height: 1.25;
+}
+
+.toast p {
+  margin-top: 4px;
+  color: inherit;
+  line-height: 1.45;
+}
+
+.toast-info {
+  border-color: #b9c9df;
+  background: #edf4fb;
+  color: #234765;
+}
+
+.toast-warning {
+  border-color: #e1c27d;
+  background: #fff6df;
+  color: #684400;
+}
+
+.toast-error {
+  border-color: #e2aaa5;
+  background: #fff0ef;
+  color: #7f241d;
+}
+
+.toast-leaving {
+  animation: toastFadeOut 0.24s ease both;
+}
+
+.toast-close {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  display: inline-grid;
+  place-items: center;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.46);
+  padding: 0;
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
 }
 
 .owner-panel {
@@ -369,6 +451,16 @@ textarea:focus {
   justify-content: space-between;
 }
 
+.room-footer-left {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.room-footer-right {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
 .copy-button {
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -405,6 +497,29 @@ textarea:focus {
   width: min(420px, 100%);
   display: grid;
   gap: 14px;
+}
+
+.tutorial-modal {
+  width: min(720px, 100%);
+}
+
+.tutorial-list {
+  display: grid;
+  gap: 10px;
+}
+
+.tutorial-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 12px;
+}
+
+.tutorial-item p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .room-modal {
@@ -464,6 +579,16 @@ textarea:focus {
 
   .owner-actions {
     flex-direction: row;
+  }
+
+  .room-footer,
+  .room-footer-left,
+  .room-footer-right {
+    align-items: stretch;
+  }
+
+  .room-footer-right {
+    justify-content: flex-start;
   }
 }
 

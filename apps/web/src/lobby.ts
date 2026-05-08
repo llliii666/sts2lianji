@@ -38,6 +38,55 @@ export const defaultRoomInput: RoomInput = {
   notes: "",
 };
 
+export const tutorialSections = [
+  {
+    title: "1. 先保存临时资料",
+    body: "填写显示名和 Steam 好友码后才能创建房间。这里不做注册和密码，本机保存 token，过期或清除浏览器数据后重新填写即可。",
+  },
+  {
+    title: "2. 创建房间后再发布",
+    body: "新建房间先是草稿，不会出现在公共大厅。点击“发布信息”后进入招募中，修改房间会自动重新发布并重置 5 分钟倒计时。",
+  },
+  {
+    title: "3. 看懂房间信息",
+    body: "版本、Mod、进阶和人数必须和实际联机一致。进阶简称使用 a，例如 a10 表示进阶 10；当前人数和目标人数都限制在 1-4。",
+  },
+  {
+    title: "4. 加好友和进语音",
+    body: "房间左下角的房主按钮会直接复制 Steam 好友码；右下角的“语音”会直接打开房主填写的语音频道外链。",
+  },
+  {
+    title: "5. 房间会自动过期",
+    body: "发布后 5 分钟内不续期会转为游戏中，再过 5 分钟自动删除。人满或不再招募时，房主可以一键结束。",
+  },
+] as const;
+
+export function getRoomSaveReminder(input: Pick<RoomInput, "modMode" | "voiceLink">, mode: "created" | "updated" | "published"): string {
+  const reminders: string[] = [];
+
+  if (mode === "created") {
+    reminders.push("草稿不会出现在公共大厅，点击“发布信息”后其他玩家才能看到。");
+  }
+  if (mode === "updated") {
+    reminders.push("修改已自动发布，并重置 5 分钟招募倒计时。");
+  }
+  if (mode === "published") {
+    reminders.push("发布后 5 分钟内需要再次发布或修改来续期。");
+  }
+
+  reminders.push(
+    input.voiceLink
+      ? "语音频道会作为外链展示，请确认它是可直接加入且仍然有效的 http/https 链接。"
+      : "未填写语音频道时，公共列表会显示“无语音”。",
+  );
+
+  if (input.modMode === "modded") {
+    reminders.push("有 Mod 房间需要所有玩家安装相同 Mod。");
+  }
+
+  return reminders.join(" ");
+}
+
 export function filterRooms(rooms: Room[], filters: LobbyFilters): Room[] {
   const query = filters.query.trim().toLowerCase();
   return rooms.filter((room) => {

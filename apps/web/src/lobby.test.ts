@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Room } from "@spire-lobby/shared";
-import { defaultFilters, defaultRoomInput, filterRooms, formatRemaining, getDifficultyLabel } from "./lobby.js";
+import {
+  defaultFilters,
+  defaultRoomInput,
+  filterRooms,
+  formatRemaining,
+  getDifficultyLabel,
+  getRoomSaveReminder,
+  tutorialSections,
+} from "./lobby.js";
 
 const baseRoom: Room = {
   id: "room-1",
@@ -45,6 +53,19 @@ describe("lobby view helpers", () => {
 
   it("starts new rooms with a blank title", () => {
     expect(defaultRoomInput.title).toBe("");
+  });
+
+  it("explains visible save reminders near the save action", () => {
+    const reminder = getRoomSaveReminder({ modMode: "modded", voiceLink: "https://example.com/voice" }, "created");
+
+    expect(reminder).toContain("草稿不会出现在公共大厅");
+    expect(reminder).toContain("可直接加入且仍然有效");
+    expect(reminder).toContain("所有玩家安装相同 Mod");
+  });
+
+  it("keeps tutorial content available for the first-login modal", () => {
+    expect(tutorialSections.map((section) => section.body).join(" ")).toContain("左下角");
+    expect(tutorialSections.map((section) => section.body).join(" ")).toContain("语音");
   });
 
   it("formats countdown as mm:ss", () => {
